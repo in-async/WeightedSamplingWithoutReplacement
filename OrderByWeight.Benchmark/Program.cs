@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Columns;
@@ -36,6 +35,7 @@ namespace InAsync.Linq.OrderByWeight.Benchmark {
         }
 
         private readonly Random _rnd = new Random();
+        private Func<double> _rand;
         private double[] _items;
 
         [Params(1000, 10000)]
@@ -43,25 +43,26 @@ namespace InAsync.Linq.OrderByWeight.Benchmark {
 
         [GlobalSetup]
         public void Setup() {
+            _rand = () => ThreadSafeRandom.Value.NextDouble();
             _items = Enumerable.Range(0, N).Select(_ => _rnd.NextDouble()).ToArray();
         }
 
         [BenchmarkCategory("TakeAll"), Benchmark(Baseline = true)]
-        public IEnumerable<double> OrderByDescending() => _items.OrderByDescending(x => x);
+        public void OrderByDescending() => _items.OrderByDescending(x => x).All(_ => true);
 
         [BenchmarkCategory("TakeAll"), Benchmark]
-        public IEnumerable<double> OrderByWeight() => _items.OrderByRandom(x => x, () => _rnd.NextDouble());
+        public void OrderByWeight() => _items.OrderByRandom(x => x, _rand).All(_ => true);
 
         [BenchmarkCategory("Take10"), Benchmark(Baseline = true)]
-        public IEnumerable<double> OrderByDescending_Take10() => _items.OrderByDescending(x => x).Take(10);
+        public void OrderByDescending_Take10() => _items.OrderByDescending(x => x).Take(10).All(_ => true);
 
         [BenchmarkCategory("Take10"), Benchmark]
-        public IEnumerable<double> OrderByWeight_Take10() => _items.OrderByRandom(x => x, () => _rnd.NextDouble()).Take(10);
+        public void OrderByWeight_Take10() => _items.OrderByRandom(x => x, _rand).Take(10).All(_ => true);
 
         [BenchmarkCategory("Take1"), Benchmark(Baseline = true)]
-        public double OrderByDescending_First() => _items.OrderByDescending(x => x).First();
+        public void OrderByDescending_First() => _items.OrderByDescending(x => x).First();
 
         [BenchmarkCategory("Take1"), Benchmark]
-        public double OrderByWeight_First() => _items.OrderByRandom(x => x, () => _rnd.NextDouble()).First();
+        public void OrderByWeight_First() => _items.OrderByRandom(x => x, _rand).First();
     }
 }

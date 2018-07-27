@@ -41,30 +41,107 @@ namespace InAsync.Linq.OrderByWeight.Tests {
             var source = new[] { 0, 1, 2, 3, 4 };
             var rnd = new Random();
             Func<double> rand = () => rnd.NextDouble();
-            var trials = 10000;
+            var trials = 30000;
 
-            var stats = (
+            var results = (
                 from _ in Enumerable.Range(0, trials)
-                select source.OrderByRandom(x => x, rand).First() into item
-                group item by item into g
-                orderby g.Count() descending
-                select new {
-                    g.Key,
-                    Count = g.Count(),
-                    Percentage = (double)g.Count() / trials,
-                }
+                select source.OrderByRandom(x => x, rand).ToArray()
             ).ToArray();
 
-            Trace.WriteLine(JsonConvert.SerializeObject(stats, Formatting.Indented));
-            stats.Select(x => new {
-                x.Key,
-                Percentage = Math.Round(x.Percentage, 1),
-            }).Is(new[] {
-                new{Key = 4, Percentage = .4},
-                new{Key = 3, Percentage = .3},
-                new{Key = 2, Percentage = .2},
-                new{Key = 1, Percentage = .1},
-            });
+            for (var i = 0; i < source.Length; i++) {
+                $"ElementAt({i}) の出現率：".Dump();
+                (
+                    from collection in results
+                    group collection[i] by collection[i] into g
+                    orderby g.Count() descending
+                    select new {
+                        Item = g.Key,
+                        Rate = (double)g.Count() / results.Length,
+                    }
+                ).ToJson().Dump();
+            }
+
+            //"並び順の出現率：".Dump();
+            //(
+            //    from colleciton in results
+            //    select string.Join(",", colleciton) into line
+            //    group line by line into g
+            //    orderby g.Count() descending
+            //    select new {
+            //        g.Key,
+            //        Percent = ((double)g.Count() / results.Length).ToString("p1"),
+            //    }
+            //).ToJson().Dump();
+
+            {
+                var stats = (
+                    from colleciton in results
+                    select colleciton.First() into item
+                    group item by item into g
+                    orderby g.Count() descending
+                    select new {
+                        g.Key,
+                        Rate = (double)g.Count() / results.Length,
+                    }
+                );
+                stats.Select(x => new {
+                    x.Key,
+                    Rate = Math.Round(x.Rate, 1),
+                }).Is(new[] {
+                    new{Key = 4, Rate = .4},
+                    new{Key = 3, Rate = .3},
+                    new{Key = 2, Rate = .2},
+                    new{Key = 1, Rate = .1},
+                });
+            }
+            {
+                var subResults = results.Where(x => x[0] == 4).ToArray();
+                var stats = (
+                    from collection in subResults
+                    select collection[1] into item
+                    group item by item into g
+                    orderby g.Count() descending
+                    select new {
+                        g.Key,
+                        Rate = (double)g.Count() / subResults.Length,
+                    }
+                );
+                "ElementAt(0) = 4 の時の出現率：".Dump();
+                $"試行数 = {subResults.Length}".Dump();
+                stats.ToJson().Dump();
+                stats.Select(x => new {
+                    x.Key,
+                    Rate = Math.Round(x.Rate, 1),
+                }).Is(new[]{
+                    new{Key = 3, Rate = .5},
+                    new{Key = 2, Rate = .3},
+                    new{Key = 1, Rate = .2},
+                });
+            }
+            {
+                var subResults = results.Where(x => x[0] == 3).ToArray();
+                var stats = (
+                    from collection in subResults
+                    select collection[1] into item
+                    group item by item into g
+                    orderby g.Count() descending
+                    select new {
+                        g.Key,
+                        Rate = (double)g.Count() / subResults.Length,
+                    }
+                );
+                "ElementAt(0) = 3 の時の出現率：".Dump();
+                $"試行数 = {subResults.Length}".Dump();
+                stats.ToJson().Dump();
+                stats.Select(x => new {
+                    x.Key,
+                    Rate = Math.Round(x.Rate, 1),
+                }).Is(new[]{
+                    new{Key = 4, Rate = .6},
+                    new{Key = 2, Rate = .3},
+                    new{Key = 1, Rate = .1},
+                });
+            }
         }
     }
 }

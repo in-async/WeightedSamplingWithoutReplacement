@@ -24,7 +24,10 @@ namespace InAsync.Linq {
 
             return InternalOrderByRandom();
 
+            // 線形探索。
             IEnumerable<T> InternalOrderByRandom() {
+                // 準備。
+                // 各要素の重みの算出、及び総重みの累積加算。O(N)
                 var totalWeight = 0d;
                 var weightedItems = source
                     .Select(item => {
@@ -39,18 +42,26 @@ namespace InAsync.Linq {
                     })
                     .ToArray();
 
-                var startIndex = 0;
-                while (startIndex < weightedItems.Length) {
-                    var target = rand() * totalWeight;
+                // 抽出。
+                // O(N)
+                var weightedItemsOffset = 0;
+                while (weightedItemsOffset < weightedItems.Length) {
+                    var rnd = rand();
+                    if (rnd < 0 || rnd > 1) { throw new InvalidOperationException(); }
+
+                    var target = rnd * totalWeight;
                     var cumulative = 0d;
 
-                    for (var i = startIndex; i < weightedItems.Length; i++) {
+                    for (var i = weightedItemsOffset; i < weightedItems.Length; i++) {
                         var weightedItem = weightedItems[i];
                         cumulative += weightedItem.weight;
 
                         if (cumulative >= target) {
                             yield return weightedItem.item;
-                            weightedItems[i] = weightedItems[startIndex++];
+
+                            // 重み更新。
+                            // 返却した要素の位置にオフセット要素を代入し、オフセット番号を切り上げて走査範囲を狭める。O(1)
+                            weightedItems[i] = weightedItems[weightedItemsOffset++];
                             totalWeight -= weightedItem.weight;
                             break;
                         }
