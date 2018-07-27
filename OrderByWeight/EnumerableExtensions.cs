@@ -14,7 +14,7 @@ namespace InAsync.Linq {
         /// <param name="weightSelector"><typeparamref name="T"/> の重みを選択するデリゲート。</param>
         /// <param name="rand">0.0 から 1.0 の乱数を生成するデリゲート。</param>
         /// <returns>並べ替えられた <typeparamref name="T"/> のコレクション。</returns>
-        public static IEnumerable<T> OrderByRandom<T>(this IEnumerable<T> source, Func<T, double> weightSelector, Func<double> rand = null) {
+        public static IEnumerable<T> OrderByWeight<T>(this IEnumerable<T> source, Func<T, double> weightSelector, Func<double> rand = null) {
             if (source == null) { throw new ArgumentNullException(nameof(source)); }
             if (weightSelector == null) { throw new ArgumentNullException(nameof(weightSelector)); }
             if (rand == null) {
@@ -22,10 +22,10 @@ namespace InAsync.Linq {
                 rand = () => rnd.NextDouble();
             }
 
-            return InternalOrderByRandom();
+            return InternalOrderByWeight();
 
             // 線形探索。
-            IEnumerable<T> InternalOrderByRandom() {
+            IEnumerable<T> InternalOrderByWeight() {
                 // 準備。
                 // 各要素の重みの算出、及び総重みの累積加算。O(N)
                 var totalWeight = 0d;

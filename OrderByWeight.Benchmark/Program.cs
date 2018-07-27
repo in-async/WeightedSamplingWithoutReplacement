@@ -51,18 +51,18 @@ namespace InAsync.Linq.OrderByWeight.Benchmark {
         public void OrderByDescending() => _items.OrderByDescending(x => x).All(_ => true);
 
         [BenchmarkCategory("TakeAll"), Benchmark]
-        public void OrderByWeight() => _items.OrderByRandom(x => x, _rand).All(_ => true);
+        public void OrderByWeight() => _items.OrderByWeight(x => x, _rand).All(_ => true);
 
         [BenchmarkCategory("Take10"), Benchmark(Baseline = true)]
         public void OrderByDescending_Take10() => _items.OrderByDescending(x => x).Take(10).All(_ => true);
 
         [BenchmarkCategory("Take10"), Benchmark]
-        public void OrderByWeight_Take10() => _items.OrderByRandom(x => x, _rand).Take(10).All(_ => true);
+        public void OrderByWeight_Take10() => _items.OrderByWeight(x => x, _rand).Take(10).All(_ => true);
 
         [BenchmarkCategory("Take1"), Benchmark(Baseline = true)]
         public void OrderByDescending_First() => _items.OrderByDescending(x => x).First();
 
         [BenchmarkCategory("Take1"), Benchmark]
-        public void OrderByWeight_First() => _items.OrderByRandom(x => x, _rand).First();
+        public void OrderByWeight_First() => _items.OrderByWeight(x => x, _rand).First();
     }
 }

@@ -11,10 +11,10 @@ namespace InAsync.Linq.OrderByWeight.Tests {
     public class EnumerableExtensionsTests {
 
         [TestMethod]
-        public void OrderByRandom() {
+        public void OrderByWeight() {
             foreach (var item in TestCases()) {
                 var message = $"No.{item.testNumber}";
-                if (!AssertException.TryExecute(() => EnumerableExtensions.OrderByRandom(item.source, item.weightSelector).ToArray(), item.expectedExceptionType, out var actual, message)) {
+                if (!AssertException.TryExecute(() => EnumerableExtensions.OrderByWeight(item.source, item.weightSelector).ToArray(), item.expectedExceptionType, out var actual, message)) {
                     continue;
                 }
 
@@ -37,7 +37,7 @@ namespace InAsync.Linq.OrderByWeight.Tests {
         }
 
         [TestMethod]
-        public void OrderByRandom_Statistics() {
+        public void OrderByWeight_Statistics() {
             var source = new[] { 0, 1, 2, 3, 4 };
             var rnd = new Random();
             Func<double> rand = () => rnd.NextDouble();
@@ -45,7 +45,7 @@ namespace InAsync.Linq.OrderByWeight.Tests {
 
             var results = (
                 from _ in Enumerable.Range(0, trials)
-                select source.OrderByRandom(x => x, rand).ToArray()
+                select source.OrderByWeight(x => x, rand).ToArray()
             ).ToArray();
 
             for (var i = 0; i < source.Length; i++) {
