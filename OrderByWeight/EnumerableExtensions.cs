@@ -22,53 +22,41 @@ namespace InAsync.Linq {
                 rand = () => rnd.NextDouble();
             }
 
-            var orderedWeighted = source
-                .Select(item => new ItemWeight<T>(item, weightSelector(item)))
-                .OrderByDescending(x => x.Weight)
-                .ToArray();
-
-            if (orderedWeighted.Any() == false) { return source; }
-            if (orderedWeighted.Last().Weight < 0) { throw new InvalidOperationException(); }
-
             return InternalOrderByRandom();
 
             IEnumerable<T> InternalOrderByRandom() {
-                var totalWeight = orderedWeighted.Sum(x => x.Weight);
-                var remainedWeighted = orderedWeighted.Length;
+                var totalWeight = 0d;
+                var weightedItems = source
+                    .Select(item => {
+                        var weight = weightSelector(item);
+                        if (weight < 0) { throw new InvalidOperationException(); }
+                        totalWeight += weight;
 
-                while (remainedWeighted > 0) {
-                    var thresholdWeight = rand() * totalWeight;
+                        return new {
+                            item,
+                            weight,
+                        };
+                    })
+                    .ToArray();
 
-                    var accumulatedWeight = 0d;
-                    foreach (var weighted in orderedWeighted) {
-                        if (weighted.Weight < 0) continue;
-                        accumulatedWeight += weighted.Weight;
+                var startIndex = 0;
+                while (startIndex < weightedItems.Length) {
+                    var target = rand() * totalWeight;
+                    var cumulative = 0d;
 
-                        if (accumulatedWeight >= thresholdWeight) {
-                            yield return weighted.Item;
+                    for (var i = startIndex; i < weightedItems.Length; i++) {
+                        var weightedItem = weightedItems[i];
+                        cumulative += weightedItem.weight;
 
-                            totalWeight -= weighted.Weight;
-                            remainedWeighted--;
-                            weighted.ResetWeight();
+                        if (cumulative >= target) {
+                            yield return weightedItem.item;
+                            weightedItems[i] = weightedItems[startIndex++];
+                            totalWeight -= weightedItem.weight;
                             break;
                         }
                     }
                 }
             }
-        }
-
-        private class ItemWeight<T> {
-
-            public ItemWeight(T item, double weight) {
-                Item = item;
-                Weight = weight;
-            }
-
-            public T Item { get; }
-
-            public double Weight { get; private set; }
-
-            public void ResetWeight() => Weight = -1;
         }
     }
 }

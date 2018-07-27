@@ -14,28 +14,25 @@ namespace InAsync.Linq.OrderByWeight.Tests {
         public void OrderByRandom() {
             foreach (var item in TestCases()) {
                 var message = $"No.{item.testNumber}";
-                if (!AssertException.TryExecute(() => EnumerableExtensions.OrderByRandom(item.source, item.weightSelector, item.rand), item.expectedExceptionType, out var actual, message)) {
+                if (!AssertException.TryExecute(() => EnumerableExtensions.OrderByRandom(item.source, item.weightSelector).ToArray(), item.expectedExceptionType, out var actual, message)) {
                     continue;
                 }
 
-                actual.Is(item.expected, message);
+                actual.OrderBy(_ => _).Is(item.source.OrderBy(_ => _), message);
             }
 
             // テストケース定義。
-            IEnumerable<(int testNumber, int[] source, Func<int, double> weightSelector, Func<double> rand, int[] expected, Type expectedExceptionType)> TestCases() => new(int testNumber, int[] source, Func<int, double> weightSelector, Func<double> rand, int[] expected, Type expectedExceptionType)[]{
-                ( 0, null            , x => x, () => 0.0, null            , typeof(ArgumentNullException)),
-                ( 1, new[]{0,1,2,3,4}, null  , () => 0.0, null            , typeof(ArgumentNullException)),
-                (10, new[]{0,1,2,3,4}, x => x, () => 0.0, new[]{4,3,2,1,0}, null),
-                (11, new[]{0,1,2,3,4}, x => x, () => 0.1, new[]{4,3,2,1,0}, null),
-                (12, new[]{0,1,2,3,4}, x => x, () => 0.2, new[]{4,3,2,1,0}, null),
-                (13, new[]{0,1,2,3,4}, x => x, () => 0.3, new[]{4,3,2,1,0}, null),
-                (14, new[]{0,1,2,3,4}, x => x, () => 0.4, new[]{4,3,2,1,0}, null),
-                (15, new[]{0,1,2,3,4}, x => x, () => 0.5, new[]{3,4,2,1,0}, null),
-                (16, new[]{0,1,2,3,4}, x => x, () => 0.6, new[]{3,2,4,1,0}, null),
-                (17, new[]{0,1,2,3,4}, x => x, () => 0.7, new[]{3,2,4,1,0}, null),
-                (18, new[]{0,1,2,3,4}, x => x, () => 0.8, new[]{2,3,4,1,0}, null),
-                (19, new[]{0,1,2,3,4}, x => x, () => 0.9, new[]{2,1,3,4,0}, null),
-                (20, new[]{0,1,2,3,4}, x => x, () => 1.0, new[]{1,2,3,4,0}, null),
+            IEnumerable<(int testNumber, int[] source, Func<int, double> weightSelector, Type expectedExceptionType)> TestCases() => new(int testNumber, int[] source, Func<int, double> weightSelector, Type expectedExceptionType)[]{
+                ( 0, null             , x => x , typeof(ArgumentNullException)),
+                ( 1, new[]{0,1,2,3,4} , null   , typeof(ArgumentNullException)),
+                ( 2, new[]{0,1,2,3,4} , x => -1, typeof(InvalidOperationException)),
+                ( 3, new[]{0,1,2,3,-1}, x => x , typeof(InvalidOperationException)),
+
+                (10, new[]{0,1,2,3,4} , x => x , null),
+                (11, new[]{0,1,2,3,4} , x => 0 , null),
+                (12, new[]{0}         , x => x , null),
+                (13, new[]{1}         , x => x , null),
+                (14, new int[0]       , x => x , null),
             };
         }
 
